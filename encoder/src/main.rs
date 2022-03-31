@@ -1,4 +1,4 @@
-#![feature(seek_stream_len)]
+//#![feature(seek_stream_len)]
 
 use std::{path::Path, io::{Read, Write, Seek}, collections::{HashMap, VecDeque}, panic, ffi::OsStr, fs::File};
 
@@ -26,7 +26,23 @@ radix/other trie compression
 fn main() {
     println!("Hello, world!");
 
-    for file in ["srtd_words", "words_i3", "words_i3_lzss", "words_i3_lzss_he", "words_i3_lzss_ari", "lzss_matches"] {
+    for file in ["srtd_words", "words_i3", "words_i3_lzss", "words_i3_lzss_he", "words_i3_lzss_ari", "lzss_matches"] { }
+    
+    //create_answers_bitmap();
+    
+    index_count_srtd_words_3();
+    //radix_trie_encode();
+    lzss_sep_matches(&Path::new("words_i3"));
+    huffman_encode(&Path::new("words_i3_lzss"));
+    arithmetic_compression(&Path::new("words_i3_lzss"));
+    //huffman_encode();
+    arithmetic_compression(&Path::new("words_i3"));
+    /* ;
+     */
+
+    /* let mut srtd_words_fhandle = std::fs::File::open(Path::new("srtd_words")).unwrap();
+    let mut srtd_buf = Vec::new();
+    srtd_words_fhan
         /* let mut fhandle = File::open(Path::new(file)).unwrap();
         let mut buf = Vec::new();
         fhandle.read_to_end(&mut buf).unwrap();
@@ -66,22 +82,7 @@ fn main() {
             favor_cpu_efficiency: false,
         }).unwrap();
         println!("brotli: {}: {}, {}", file, out_buf.len(), brotli); */
-    }
-    
-    //create_answers_bitmap();
-    
-    index_count_srtd_words_3();
-    lzss_sep_matches(&Path::new("words_i3"));
-    huffman_encode(&Path::new("words_i3_lzss"));
-    arithmetic_compression(&Path::new("words_i3_lzss"));
-    //huffman_encode();
-    //arithmetic_compression(&Path::new("words_i3"));
-    /* ;
-     */
-
-    /* let mut srtd_words_fhandle = std::fs::File::open(Path::new("srtd_words")).unwrap();
-    let mut srtd_buf = Vec::new();
-    srtd_words_fhandle.read_to_end(&mut srtd_buf).unwrap();
+        dle.read_to_end(&mut srtd_buf).unwrap();
 
     let mut words_i3_fhandle = std::fs::File::open(Path::new("words_i3")).unwrap();
     let mut i3_buf = Vec::new();
@@ -97,6 +98,60 @@ fn main() {
 
 
 fn radix_trie_encode() {
+    // aahed aalii aargh aarti abaca abaci abbab
+    // aahedaaliiaarghaartiabacaabaciabbab
+    // aahed}lii}rghti}}bacaci}bab
+    // }}}}}}}ed}}}}ii}}}}}}ghti|caci}ab
+    // 2 
+    // a0a1hed1lii1r2gh2ti1ba3c4a4i
+    // a{a{hedliirghrti2{ac{ai
+    // aah|edl|iirghti|+a|c{ai
+    // aah}edl}iirghti}+ac{ai}+ab
+    // a0a1h2|1e1d[]1l2|1i1i[]1r2g2h[]2t2i[]2|1+(ab)a2c2{3a[]3i[]3|2+(abb)2ab[]2
+    // abaca+
+    // ddd  
+    // increment behind the level, increment does not drop lvl into a nonassume dlevel
+    
+    // aahedliirghrti2ac{ai
+
+    // auto drop down after an entry at an auto drop index
+    // if |, hike the lvl
+    // if invalid a seq, hike the lvl
+    // if +, inc at the level, drop a level if auto drop index
+    // if invalid z seq, drop a level
+    
+    
+    // bemad bemas bemix bemud bench bends bendy benes benet benga
+    // bemadbemasbemixbemudbenchbendsbendybenesbenetbenga
+    // bemadasixud}nchdsdyesetga
+    // bema{ds}ixud+chd{sy}e{st}ga
+    // bemadasixud+chdsdyesetga
+    // bemadasixud3chdsdyesetga
+    // be{m{adasixud3{chdsdyesetga
+    // bemadasixud+chdsdyesetga
+    // be{m{a{ds}ixud}n{chd{sy}e{st}ga
+    
+    // word endings are implicit and hence transition needn't be marked
+    // levelu/leveld markers or nleveld nlevelu markers?
+    // increment using a index-dedicated symbol or i-ded after levelu
+    // on level down, indicate, on level up, indicate unless not necessary
+    // // not necessary at EOF
+    // 
+    // on the levels where it is more common to remain, indicate deltas, else indicate non-deltas
+    // leveld L, levelu l, delta D, ndelta d
+    
+    
+    
+    /* const WORD_LENGTH: usize = 5;
+    const ASSUME_LEVELD_INDEX: u8 = 3;
+    
+    const LEVELD: u8 = b'{';
+    const LEVELU: u8 = b'}';
+    const NLEVELD: u8 = b'|';
+    const INC: u8 = b'+'; */
+    
+
+
     let mut srtd_words_fhandle = std::fs::File::open(Path::new("srtd_words")).expect("srtd_words file open failed");
     let mut words_char_list = Vec::new();
     srtd_words_fhandle.read_to_end(&mut words_char_list).expect("failed to read words");
@@ -107,21 +162,21 @@ fn radix_trie_encode() {
 
     let mut words_i3_fhandle = std::fs::File::create(Path::new("words_i3")).unwrap();
 
-    let mut counters = [b'a'; 3];
+    let mut last = [b'a', b'a', b'h',/*  b'e' */];
 
-    for w in words_vec {
+    'next: for w in words_vec {
+        let w = w.as_bytes();
         for i in 0..3 {
-            for _ in 0..(w.as_bytes()[i] - counters[i]) {
-                words_i3_fhandle.write_all(&[i as u8 + ZERO_INDEX_CHAR]).unwrap();
-                counters[i] += 1;
-                
-                for c in &mut counters[(i + 1)..3] {
-                    *c = b'a';
+            if w[i] != last[i] {
+                for j in i..3 {
+                    last[j] = w[j];
+                    words_i3_fhandle.write_all(&[b'}']).unwrap();
                 }
+                words_i3_fhandle.write_all(&w[i..5]).unwrap();
+                continue 'next;
             }
         }
-        
-        words_i3_fhandle.write_all(&w.as_bytes()[3..5]).unwrap();
+        words_i3_fhandle.write_all(&w[3..5]).unwrap();
     }
 }
 
@@ -138,7 +193,7 @@ const CHAR_RANGE_LEN: usize = (ACME_RANGE_CHAR - BASE_RANGE_CHAR + 1) as usize;
 #[allow(dead_code)]
 fn arithmetic_compression(src: impl AsRef<Path>) {
     let mut src_fhandle = File::open(src.as_ref()).unwrap();
-    let mut src_buf = Vec::with_capacity(src_fhandle.stream_len().unwrap() as usize);
+    let mut src_buf = Vec::with_capacity(10000/* src_fhandle.stream_len().unwrap() as usize */);
     src_fhandle.read_to_end(&mut src_buf).unwrap();
 
     // GET SYMBOL FREQUENCIES
@@ -263,14 +318,14 @@ fn create_answers_bitmap() {
 #[allow(dead_code)]
 fn lzss_sep_matches(src: impl AsRef<Path>) {
     let mut src_fhandle = File::open(src.as_ref()).unwrap();
-    let mut src_buf = Vec::with_capacity(src_fhandle.stream_len().unwrap() as usize);
+    let mut src_buf = Vec::with_capacity(10000/* src_fhandle.stream_len().unwrap() as usize */);
     src_fhandle.read_to_end(&mut src_buf).unwrap();
     src_buf.reverse();
 
     const MATCH_BITS: usize = 3;
-    const WINDOW_BITS: usize = 12;
+    const WINDOW_BITS: usize = 11;
 
-    const MATCH_MIN: usize = 5;
+    const MATCH_MIN: usize = 6;
     const MATCH_MAX: usize = MATCH_MIN + (1 << MATCH_BITS) - 1;
     const SEARCH_WINDOW_LEN: usize = 1 << WINDOW_BITS;
 
@@ -310,7 +365,7 @@ fn lzss_sep_matches(src: impl AsRef<Path>) {
             }
 
             encoded_bytes.push(LZSS_MATCH_CHAR);
-            matches_vec.push(best_match);
+            matches_vec.push((best_match.0, best_match.1 - MATCH_MIN));
         } else {
             let encode = buffer.pop_front().unwrap();
             encoded_bytes.push(encode);
@@ -333,30 +388,37 @@ fn lzss_sep_matches(src: impl AsRef<Path>) {
     lzss_fhandle.write_all(&encoded_bytes).unwrap();
 
     let mut lzss_matches_fhandle = std::fs::File::create(Path::new("lzss_matches")).unwrap();
+
+    println!("{:?}", matches_vec[0]);
+    println!("{:?}", matches_vec[1]);
+    println!("{:?}", matches_vec[2]);
+
+    // 00 08 00 30 77
+    // 0000 0000 0001 0000 0000 0000 0000 1100 1110 1110
+    // 0                1                 2             
     
     let mut buffer = 0usize;
     let mut buf_len = 0usize;
     for (offset, len) in matches_vec {
+        buffer |= (offset | (len << WINDOW_BITS)) << buf_len;
         buf_len += MATCH_BITS + WINDOW_BITS;
-        buffer <<= MATCH_BITS + WINDOW_BITS;
-        buffer |= len | (offset << MATCH_BITS);
 
         while buf_len >= 8 {
-            lzss_matches_fhandle.write_all(&[(buffer >> buf_len - 8) as u8]).unwrap();
+            lzss_matches_fhandle.write_all(&[buffer as u8]).unwrap();
             buf_len -= 8;
             buffer >>= 8;
         }
     }
     
     if buf_len > 0 {
-        lzss_matches_fhandle.write_all(&[(buffer << 8 - buf_len) as u8]).unwrap();
+        lzss_matches_fhandle.write_all(&[buffer as u8]).unwrap();
     }
 }
 
 #[allow(dead_code)]
 fn lzss(src: impl AsRef<Path>) {
     let mut src_fhandle = File::open(src.as_ref()).unwrap();
-    let mut src_buf = Vec::with_capacity(src_fhandle.stream_len().unwrap() as usize);
+    let mut src_buf = Vec::with_capacity(10000/* src_fhandle.stream_len().unwrap() as usize */);
     src_fhandle.read_to_end(&mut src_buf).unwrap();
     src_buf.reverse();
 
@@ -463,7 +525,7 @@ enum Node {
 #[allow(dead_code)]
 fn huffman_encode(src: impl AsRef<Path>) {
     let mut src_fhandle = File::open(src.as_ref()).unwrap();
-    let mut src_buf = Vec::with_capacity(src_fhandle.stream_len().unwrap() as usize);
+    let mut src_buf = Vec::with_capacity(10000/* src_fhandle.stream_len().unwrap() as usize */);
     src_fhandle.read_to_end(&mut src_buf).unwrap();
 
     let mut syms: HashMap<_, usize> = HashMap::new();
@@ -499,8 +561,8 @@ fn huffman_encode(src: impl AsRef<Path>) {
     while let Some(node) = tree_nav_stack.pop() {
         match node.0 {
             Node::Branch((a, b)) => {
-                tree_nav_stack.push((a, node.1 << 1, node.2 + 1));
-                tree_nav_stack.push((b, node.1 << 1 | 1, node.2 + 1));
+                tree_nav_stack.push((a, node.1, node.2 + 1));
+                tree_nav_stack.push((b, node.1 | 1 << node.2, node.2 + 1));
             },
             Node::Leaf(val) =>  { 
                 assert!(table.insert(*val, (node.1, node.2)).is_none());
@@ -509,6 +571,97 @@ fn huffman_encode(src: impl AsRef<Path>) {
     }
 
     // PRINT TREE AS ARRAY
+
+    println!("{:?}", root.0);
+
+    /* Branch((
+        Branch((
+            Branch((
+                Branch((
+                    Branch((
+                        Leaf(110),
+                        Branch((
+                            Branch((
+                                Branch((
+                                    Branch((
+                                        Leaf(120),
+                                        Branch((
+                                            Leaf(106),
+                                            Branch((
+                                                Leaf(123), 
+                                                Leaf(113)
+                                            ))
+                                        ))
+                                    )),
+                                    Leaf(122)
+                                )), 
+                                Leaf(98)
+                            )), 
+                            Leaf(104)
+                        ))
+                    )), 
+                    Branch((
+                        Leaf(105), 
+                        Leaf(108)
+                    ))
+                )), 
+                Branch((
+                    Branch((
+                        Leaf(114), 
+                        Branch((
+                            Leaf(109), 
+                            Leaf(103)
+                        ))
+                    )), 
+                    Branch((
+                        Leaf(111), 
+                        Branch((
+                            Leaf(112), 
+                            Leaf(99)
+                        ))
+                    ))
+                ))
+            )), 
+            Branch((
+                Leaf(115), 
+                Branch((
+                    Branch((
+                        Branch((
+                            Leaf(117), 
+                            Leaf(124)
+                        )), 
+                        Leaf(100)
+                    )), 
+                    Leaf(97)
+                ))
+            ))
+        )), 
+        Branch((
+            Branch((
+                Leaf(125), 
+                Branch((
+                    Leaf(116), 
+                    Leaf(126)
+                ))
+            )), 
+            Branch((
+                Leaf(101), 
+                Branch((
+                    Branch((
+                        Leaf(107), 
+                        Branch((
+                            Branch((
+                                Leaf(119), 
+                                Leaf(118)
+                            )), 
+                            Leaf(102)
+                        ))
+                    )), 
+                    Leaf(121)
+                ))
+            ))
+        ))
+    )) */
 
     let mut table_bytes = Vec::new();
     let mut tree_rev_nav_map = HashMap::new(); // code: offset
@@ -558,19 +711,22 @@ fn huffman_encode(src: impl AsRef<Path>) {
         total_len += huff_code.1;
         assert!(buf_len + huff_code.1 < 64);
 
+        buffer |= huff_code.0 << buf_len;
         buf_len += huff_code.1;
-        buffer <<= huff_code.1;
-        buffer |= huff_code.0;
 
         while buf_len >= 8 {
-            i3_he_fhandle.write_all(&[(buffer >> buf_len - 8) as u8]).unwrap();
+            i3_he_fhandle.write_all(&[buffer as u8]).unwrap();
             buf_len -= 8;
             buffer >>= 8;
         }
     }
+
+    // 01 110 011
+    // 01110
+    // 01 11 
     
     if buf_len > 0 {
-        i3_he_fhandle.write_all(&[(buffer << 8 - buf_len) as u8]).unwrap();
+        i3_he_fhandle.write_all(&[buffer as u8]).unwrap();
         println!("bit offset from EOF: {}", 8 - buf_len);
         total_len += 8 - buf_len;
     }
@@ -591,7 +747,7 @@ fn index_count_srtd_words_3() {
 
     let mut words_i3_fhandle = std::fs::File::create(Path::new("words_i3")).unwrap();
 
-    let mut counters = [b'a'; 3];
+    let mut counters = [b'a', b'a', b'h'];
 
     for w in words_vec {
         for i in 0..3 {
