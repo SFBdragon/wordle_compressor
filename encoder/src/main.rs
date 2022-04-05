@@ -572,97 +572,6 @@ fn huffman_encode(src: impl AsRef<Path>) {
 
     // PRINT TREE AS ARRAY
 
-    println!("{:?}", root.0);
-
-    /* Branch((
-        Branch((
-            Branch((
-                Branch((
-                    Branch((
-                        Leaf(110),
-                        Branch((
-                            Branch((
-                                Branch((
-                                    Branch((
-                                        Leaf(120),
-                                        Branch((
-                                            Leaf(106),
-                                            Branch((
-                                                Leaf(123), 
-                                                Leaf(113)
-                                            ))
-                                        ))
-                                    )),
-                                    Leaf(122)
-                                )), 
-                                Leaf(98)
-                            )), 
-                            Leaf(104)
-                        ))
-                    )), 
-                    Branch((
-                        Leaf(105), 
-                        Leaf(108)
-                    ))
-                )), 
-                Branch((
-                    Branch((
-                        Leaf(114), 
-                        Branch((
-                            Leaf(109), 
-                            Leaf(103)
-                        ))
-                    )), 
-                    Branch((
-                        Leaf(111), 
-                        Branch((
-                            Leaf(112), 
-                            Leaf(99)
-                        ))
-                    ))
-                ))
-            )), 
-            Branch((
-                Leaf(115), 
-                Branch((
-                    Branch((
-                        Branch((
-                            Leaf(117), 
-                            Leaf(124)
-                        )), 
-                        Leaf(100)
-                    )), 
-                    Leaf(97)
-                ))
-            ))
-        )), 
-        Branch((
-            Branch((
-                Leaf(125), 
-                Branch((
-                    Leaf(116), 
-                    Leaf(126)
-                ))
-            )), 
-            Branch((
-                Leaf(101), 
-                Branch((
-                    Branch((
-                        Leaf(107), 
-                        Branch((
-                            Branch((
-                                Leaf(119), 
-                                Leaf(118)
-                            )), 
-                            Leaf(102)
-                        ))
-                    )), 
-                    Leaf(121)
-                ))
-            ))
-        ))
-    )) */
-
     let mut table_bytes = Vec::new();
     let mut tree_rev_nav_map = HashMap::new(); // code: offset
     tree_nav_stack.push((&root.0, 0, 0)); // node, code, nada
@@ -720,10 +629,6 @@ fn huffman_encode(src: impl AsRef<Path>) {
             buffer >>= 8;
         }
     }
-
-    // 01 110 011
-    // 01110
-    // 01 11 
     
     if buf_len > 0 {
         i3_he_fhandle.write_all(&[buffer as u8]).unwrap();
