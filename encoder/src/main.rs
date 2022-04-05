@@ -26,17 +26,17 @@ radix/other trie compression
 fn main() {
     println!("Hello, world!");
 
-    for file in ["srtd_words", "words_i3", "words_i3_lzss", "words_i3_lzss_he", "words_i3_lzss_ari", "lzss_matches"] { }
+    //for file in ["srtd_words", "words_i3", "words_i3_lzss", "words_i3_lzss_he", "words_i3_lzss_ari", "lzss_matches"] { }
     
     //create_answers_bitmap();
-    
+    //sort_words();
     index_count_srtd_words_3();
     //radix_trie_encode();
     lzss_sep_matches(&Path::new("words_i3"));
     huffman_encode(&Path::new("words_i3_lzss"));
     arithmetic_compression(&Path::new("words_i3_lzss"));
     //huffman_encode();
-    arithmetic_compression(&Path::new("words_i3"));
+    //arithmetic_compression(&Path::new("words_i3"));
     /* ;
      */
 

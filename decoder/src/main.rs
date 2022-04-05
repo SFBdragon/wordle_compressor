@@ -1,16 +1,16 @@
 static EXISTS_SUCCESS: &str = "valid";
 static EXISTS_FAILURE: &str = "inval";
 
-static WORDS_BLOB: [u8; 13493] = [50u8; 13493];
-static LZSS_MATCHES: [u8; 2214] = [50u8; 2214];
+static WORDS_BLOB: [u8; 13493] = [50u8; 13493]; // include_bytes!(../encoder/words_i3_lzss_he);
+static LZSS_MATCHES: [u8; 2214] = [50u8; 2214];  // include_bytes!(../encoder/lzss_matches)
 
 static mut LZSS_WINDOW: [u8; 2048] = [b'}'; 2048];
 const LZSS_WINDOW_LEN: usize = 2048;
 
 // generated inside the huffman encode function: positive values are indecies pointing to a branch pair, negative are leaf values
-static HUFFMAN_TREE: [i8; 58] = [18, 2, 14, 4, -101, 6, 8, -121, -107, 10, 12, -102, -119, -118,
-    -125, 16, -116, -126, 28, 20, -115, 22, 24, -97, 26, -100, -117, -124, 40, 30, 36, 32, -111,
-    34, -112, -99, -114, 38, -109, -103, 44, 42, -105, -108, -110, 46, 48, -104, 50, -98, 52, -122, 
+static HUFFMAN_TREE: [i8; 58] = [18, 2, 14, 4, -101, 6, 8, -121, -107, 10, 12, -102, -119, -118, 
+    -125, 16, -116, -126, 28, 20, -115, 22, 24, -97, 26, -100, -117, -124, 40, 30, 38, 32, 36, 34, 
+    -112, -99, -109, -103, -114, -111, 44, 42, -105, -108, -110, 46, 48, -104, 50, -98, 52, -122, 
     -120, 54, -106, 56, -123, -113];
 
 union ArgMem {
