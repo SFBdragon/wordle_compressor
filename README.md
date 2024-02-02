@@ -1,6 +1,6 @@
 ## How Little Information Do You Need To Transmit The Entire Wordle List And Its Decoder?
 
-This little project compresses the entire Wordle list plus the decoder into as little space as possible.
+This little project compresses the entire Wordle list plus the decoder into as little space as I could manage.
 
 Many encoding schemes require additional shared data, such as sizeable encoders/decoders with built-in tables, taking up prescious bits on your... magnetic drum? Don't ask.
 
