@@ -2,7 +2,7 @@
 
 This little project compresses the entire Wordle list plus the decoder into as little space as I could manage.
 
-Many encoding schemes require additional shared data, such as sizeable encoders/decoders with built-in tables, taking up prescious bits on your... magnetic drum? Don't ask.
+Many encoding schemes require additional shared data, such as sizeable encoders/decoders with built-in tables, taking up prescious bits on your... magnetic drum? Can't have that.
 
 The requirements for the decoder are as follows:
 - Must be able to confirm whether a word is in the list or not.
